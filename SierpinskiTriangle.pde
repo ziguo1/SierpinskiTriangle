@@ -1,82 +1,90 @@
-final int MIN_LENGTH = 20;
+final int MIN_LENGTH = 10;
 final color BG_COLOR = color(64, 64, 64);
-final color FILL_COLOR = color(255, 255, 255);
+color FILL_COLOR = color(255, 255, 255);
 
-PGraphics canvas;
-CanvasViewer viewer;
+float osX = 0, osY = 0, zoom = 1, actualZoom = 1, aOsX = 0, aOsY = 0;
+float pmX = 0, pmY = 0, time = 0;
+
+float breathingAmount = 127;
 
 void setup() {
   size(512, 512);
-  canvas = createGraphics(512, 512);
-  viewer = new CanvasViewer(canvas);
 }
-
-
 
 void draw() {
-  canvas.beginDraw();
-  canvas.background(BG_COLOR);
-  drawFunnyTriangle(canvas, 256, 50, 256); // Start drawing triangles
-  canvas.endDraw();
+  actualZoom = lerp(actualZoom, zoom, 0.1);
+  aOsX = lerp(aOsX, osX, 0.2);
+  aOsY = lerp(aOsY, osY, 0.2);
+
+  translate(aOsX, aOsY);
+  scale(actualZoom);
+
+  FILL_COLOR = color(sin(time) * breathingAmount + breathingAmount,
+    sin(time + 0.5) * breathingAmount + breathingAmount,
+    sin(time + 1.0) * breathingAmount + breathingAmount);
+  time += 0.005;
+
+  background(BG_COLOR);
+  noStroke();
+  drawFunnyTriangle(width / 2, 0, width);
 }
 
-void drawFunnyTriangle(PGraphics ctx, int x, int y, int length) {
+void mousePressed() {
+  pmX = mouseX;
+  pmY = mouseY;
+}
+
+void mouseDragged() {
+  osX += mouseX - pmX;
+  osY += mouseY - pmY;
+  pmX = mouseX;
+  pmY = mouseY;
+}
+
+void keyPressed() {
+  if (key == 'i') {
+    zoom += 0.2;
+  } else if (key == 'o') {
+    zoom -= 0.2;
+  }
+  zoom = constrain(zoom, 0.5, 10);
+}
+
+void drawFunnyTriangle(int x, int y, int length) {
   if (length < MIN_LENGTH) {
     return;
   } else {
     int top = (int) ((length / 4) * Math.sqrt(3));
     int bottom = (int) ((length / 2) * Math.sqrt(3));
     int newLength = length / 2;
-    ctx.fill(FILL_COLOR);
-    
-      {
-        ctx.triangle(
-          x, y,
-          x - (length / 4), y + top,
-          x + (length / 4), y + top
-        );
-        drawFunnyTriangle(ctx, x, y, newLength);
-        ctx.triangle(
-          x - (length / 4), y + top,
-          x - (length / 2), y + bottom,
-          x, y + bottom
-        );
-        drawFunnyTriangle(ctx, x - (length / 4), y + top, newLength);
-        ctx.triangle(
-          x + (length / 4), y + top,
-          x + (length / 2), y + bottom,
-          x, y + bottom
-        );
-        drawFunnyTriangle(ctx, x + (length / 4), y + top, newLength);
-      }
-      
-      ctx.fill(BG_COLOR);
-      ctx.triangle(
+    fill(FILL_COLOR);
+
+    {
+      triangle(
+        x, y,
         x - (length / 4), y + top,
-        x + (length / 4), y + top,
+        x + (length / 4), y + top
+        );
+      drawFunnyTriangle(x, y, newLength);
+      triangle(
+        x - (length / 4), y + top,
+        x - (length / 2), y + bottom,
         x, y + bottom
+        );
+      drawFunnyTriangle(x - (length / 4), y + top, newLength);
+      triangle(
+        x + (length / 4), y + top,
+        x + (length / 2), y + bottom,
+        x, y + bottom
+        );
+      drawFunnyTriangle(x + (length / 4), y + top, newLength);
+    }
+
+    fill(BG_COLOR);
+    triangle(
+      x - (length / 4), y + top,
+      x + (length / 4), y + top,
+      x, y + bottom
       );
   }
-}
-
-class CanvasViewer {
-  PGraphics ctx;
-  int x, y;
-  float scale;
-  
-  public CanvasViewer(PGraphics ctx) {
-    this.ctx = ctx;
-    this.x = ctx.width / 2;
-    this.y = ctx.height / 2;
-    this.scale = 1;
-  }
-  
-public void drawToFrameBuffer() {
-    background(BG_COLOR);
-    pushMatrix();
-    translate(x, y);
-    scale(scale);
-    image(ctx, -ctx.width/2, -ctx.height/2);
-    popMatrix();
-}
 }

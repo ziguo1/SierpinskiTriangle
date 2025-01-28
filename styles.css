@@ -19,3 +19,11 @@ footer {
 	font-style: italic;
 	font-size: 90%;
 }
+
+.grabbable {
+    cursor: grab;
+}
+
+.grabbing {
+    cursor: grabbing;
+}
